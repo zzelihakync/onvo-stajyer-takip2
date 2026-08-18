@@ -1,37 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   Box,
-  Typography,
   Button,
   Card,
   CardContent,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
   Chip,
-  Switch,
-  FormControlLabel,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  IconButton,
+  TextField,
+  Typography,
 } from "@mui/material";
 
 import {
-  Add,
-  Edit,
-  Delete,
-  Business,
-  People,
-  CheckCircle,
-  Block,
-  Palette,
   Dashboard,
+  People,
+  Business,
   Description,
   EventAvailable,
   Folder,
@@ -40,28 +30,233 @@ import {
   Settings,
   Logout,
   Person,
+  Add,
+  Edit,
+  Delete,
+  Groups,
   Close,
 } from "@mui/icons-material";
 
-interface Stajyer {
-  id: number;
-  ad: string;
-  pozisyon: string;
-  supervisor: string;
-}
+import { usePathname, useRouter } from "next/navigation";
 
-interface Departman {
+type Departman = {
   id: number;
   ad: string;
   sorumlu: string;
-  stajyer: number;
-  stajyerler: Stajyer[];
-  renk: string;
-  aktif: boolean;
-}
+  stajyerSayisi: number;
+  durum: "Aktif" | "Pasif";
+};
+
+type Stajyer = {
+  ad: string;
+  universite: string;
+  bolum: string;
+};
 
 export default function DepartmanlarPage() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [departmanlar, setDepartmanlar] = useState<
+    Departman[]
+  >([
+    {
+      id: 1,
+      ad: "Yazılım",
+      sorumlu: "Yetkili Kullanıcı",
+      stajyerSayisi: 8,
+      durum: "Aktif",
+    },
+    {
+      id: 2,
+      ad: "Ar-Ge",
+      sorumlu: "Ahmet Yılmaz",
+      stajyerSayisi: 5,
+      durum: "Aktif",
+    },
+    {
+      id: 3,
+      ad: "Elektrik-Elektronik",
+      sorumlu: "Mehmet Demir",
+      stajyerSayisi: 4,
+      durum: "Aktif",
+    },
+    {
+      id: 4,
+      ad: "Mekanik",
+      sorumlu: "Ayşe Çelik",
+      stajyerSayisi: 3,
+      durum: "Aktif",
+    },
+  ]);
+
+  const [dialogOpen, setDialogOpen] =
+    useState(false);
+
+  const [duzenlemeId, setDuzenlemeId] =
+    useState<number | null>(null);
+
+  const [departmanAdi, setDepartmanAdi] =
+    useState("");
+
+  const [sorumlu, setSorumlu] =
+    useState("");
+
+  // Stajyer modalı
+  const [stajyerDialogOpen, setStajyerDialogOpen] =
+    useState(false);
+
+  const [seciliDepartman, setSeciliDepartman] =
+    useState<Departman | null>(null);
+
+  // --------------------------------------------------
+  // DEPARTMANLARA AİT STAJYERLER
+  // --------------------------------------------------
+
+  const departmanStajyerleri: Record<
+    string,
+    Stajyer[]
+  > = {
+    Yazılım: [
+      {
+        ad: "Zeliha Koyuncu",
+        universite:
+          "İstanbul Gelişim Üniversitesi",
+        bolum: "Yazılım Mühendisliği",
+      },
+      {
+        ad: "Zeynep Kaya",
+        universite:
+          "İstanbul Gelişim Üniversitesi",
+        bolum: "Bilgisayar Mühendisliği",
+      },
+      {
+        ad: "Elif Çelik",
+        universite:
+          "İstanbul Üniversitesi",
+        bolum: "Yazılım Mühendisliği",
+      },
+      {
+        ad: "Mehmet Demir",
+        universite:
+          "Yıldız Teknik Üniversitesi",
+        bolum: "Bilgisayar Mühendisliği",
+      },
+      {
+        ad: "Ahmet Yılmaz",
+        universite:
+          "İstanbul Teknik Üniversitesi",
+        bolum: "Bilgisayar Mühendisliği",
+      },
+      {
+        ad: "Ayşe Çelik",
+        universite:
+          "Marmara Üniversitesi",
+        bolum: "Yazılım Mühendisliği",
+      },
+      {
+        ad: "Can Kaya",
+        universite:
+          "İstanbul Üniversitesi",
+        bolum: "Bilgisayar Mühendisliği",
+      },
+      {
+        ad: "Deniz Şahin",
+        universite:
+          "İstanbul Gelişim Üniversitesi",
+        bolum: "Yazılım Mühendisliği",
+      },
+    ],
+
+    "Ar-Ge": [
+      {
+        ad: "Ahmet Yılmaz",
+        universite:
+          "İstanbul Teknik Üniversitesi",
+        bolum: "Elektronik Mühendisliği",
+      },
+      {
+        ad: "Mert Kaya",
+        universite:
+          "Yıldız Teknik Üniversitesi",
+        bolum: "Elektrik-Elektronik Mühendisliği",
+      },
+      {
+        ad: "Buse Demir",
+        universite:
+          "Marmara Üniversitesi",
+        bolum: "Bilgisayar Mühendisliği",
+      },
+      {
+        ad: "Ece Yıldız",
+        universite:
+          "İstanbul Üniversitesi",
+        bolum: "Endüstri Mühendisliği",
+      },
+      {
+        ad: "Kerem Aydın",
+        universite:
+          "İstanbul Gelişim Üniversitesi",
+        bolum: "Yazılım Mühendisliği",
+      },
+    ],
+
+    "Elektrik-Elektronik": [
+      {
+        ad: "Mehmet Demir",
+        universite:
+          "Yıldız Teknik Üniversitesi",
+        bolum:
+          "Elektrik-Elektronik Mühendisliği",
+      },
+      {
+        ad: "Burak Kaya",
+        universite:
+          "İstanbul Teknik Üniversitesi",
+        bolum:
+          "Elektrik-Elektronik Mühendisliği",
+      },
+      {
+        ad: "Emre Yılmaz",
+        universite:
+          "Marmara Üniversitesi",
+        bolum:
+          "Elektrik-Elektronik Mühendisliği",
+      },
+      {
+        ad: "Selin Çelik",
+        universite:
+          "İstanbul Üniversitesi",
+        bolum:
+          "Elektrik-Elektronik Mühendisliği",
+      },
+    ],
+
+    Mekanik: [
+      {
+        ad: "Ayşe Çelik",
+        universite:
+          "Marmara Üniversitesi",
+        bolum: "Makine Mühendisliği",
+      },
+      {
+        ad: "Hasan Demir",
+        universite:
+          "Yıldız Teknik Üniversitesi",
+        bolum: "Makine Mühendisliği",
+      },
+      {
+        ad: "Mert Şahin",
+        universite:
+          "İstanbul Teknik Üniversitesi",
+        bolum: "Makine Mühendisliği",
+      },
+    ],
+  };
+
+  // --------------------------------------------------
+  // MENÜ
+  // --------------------------------------------------
 
   const menuItems = [
     {
@@ -91,7 +286,7 @@ export default function DepartmanlarPage() {
     },
     {
       icon: <Folder />,
-      text: "Kütüphane",
+      text: "Belgeler",
       path: "/yetkili/belgeler",
     },
     {
@@ -111,246 +306,61 @@ export default function DepartmanlarPage() {
     },
   ];
 
-  // =========================================================
-  // DEPARTMANLAR
-  // =========================================================
-
-  const [departmanlar, setDepartmanlar] = useState<Departman[]>([
-    {
-      id: 1,
-      ad: "Yazılım",
-      sorumlu: "Yetkili Kullanıcı",
-      stajyer: 8,
-      stajyerler: [
-        {
-          id: 1,
-          ad: "Zeliha Koyuncu",
-          pozisyon: "Yazılım Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 2,
-          ad: "Elif Demir",
-          pozisyon: "Yazılım Stajyeri",
-          supervisor: "Mehmet Kaya",
-        },
-        {
-          id: 3,
-          ad: "Mehmet Kaya",
-          pozisyon: "Frontend Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 4,
-          ad: "Ayşe Yıldız",
-          pozisyon: "Backend Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 5,
-          ad: "Can Aydın",
-          pozisyon: "Yazılım Stajyeri",
-          supervisor: "Mehmet Kaya",
-        },
-        {
-          id: 6,
-          ad: "Ece Şahin",
-          pozisyon: "Frontend Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 7,
-          ad: "Burak Çelik",
-          pozisyon: "Yazılım Stajyeri",
-          supervisor: "Mehmet Kaya",
-        },
-        {
-          id: 8,
-          ad: "Derya Arslan",
-          pozisyon: "Mobil Uygulama Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-      ],
-      renk: "#132453",
-      aktif: true,
-    },
-    {
-      id: 2,
-      ad: "Ar-Ge",
-      sorumlu: "Ahmet Yılmaz",
-      stajyer: 5,
-      stajyerler: [
-        {
-          id: 9,
-          ad: "Berk Özdemir",
-          pozisyon: "Ar-Ge Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 10,
-          ad: "Sude Kaya",
-          pozisyon: "Ar-Ge Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 11,
-          ad: "Emir Koç",
-          pozisyon: "Ar-Ge Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 12,
-          ad: "İrem Aksoy",
-          pozisyon: "Ar-Ge Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-        {
-          id: 13,
-          ad: "Mert Yıldırım",
-          pozisyon: "Ar-Ge Stajyeri",
-          supervisor: "Ahmet Yılmaz",
-        },
-      ],
-      renk: "#2563EB",
-      aktif: true,
-    },
-    {
-      id: 3,
-      ad: "Elektrik-Elektronik",
-      sorumlu: "Mehmet Demir",
-      stajyer: 4,
-      stajyerler: [
-        {
-          id: 14,
-          ad: "Kerem Acar",
-          pozisyon: "Elektrik-Elektronik Stajyeri",
-          supervisor: "Mehmet Demir",
-        },
-        {
-          id: 15,
-          ad: "Buse Karaca",
-          pozisyon: "Elektrik-Elektronik Stajyeri",
-          supervisor: "Mehmet Demir",
-        },
-        {
-          id: 16,
-          ad: "Oğuzhan Kurt",
-          pozisyon: "Elektronik Stajyeri",
-          supervisor: "Mehmet Demir",
-        },
-        {
-          id: 17,
-          ad: "Selin Er",
-          pozisyon: "Elektronik Stajyeri",
-          supervisor: "Mehmet Demir",
-        },
-      ],
-      renk: "#059669",
-      aktif: true,
-    },
-    {
-      id: 4,
-      ad: "Mekanik",
-      sorumlu: "Ayşe Çelik",
-      stajyer: 3,
-      stajyerler: [
-        {
-          id: 18,
-          ad: "Ali Demir",
-          pozisyon: "Mekanik Stajyeri",
-          supervisor: "Ayşe Çelik",
-        },
-        {
-          id: 19,
-          ad: "Nazlı Yılmaz",
-          pozisyon: "Mekanik Stajyeri",
-          supervisor: "Ayşe Çelik",
-        },
-        {
-          id: 20,
-          ad: "Kaan Şen",
-          pozisyon: "Mekanik Stajyeri",
-          supervisor: "Ayşe Çelik",
-        },
-      ],
-      renk: "#D97706",
-      aktif: true,
-    },
-  ]);
-
-  // =========================================================
-  // DEPARTMAN DİYALOĞU
-  // =========================================================
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const [duzenlenenDepartman, setDuzenlenenDepartman] =
-    useState<Departman | null>(null);
-
-  const [departmanAdi, setDepartmanAdi] = useState("");
-  const [sorumlu, setSorumlu] = useState("");
-  const [renk, setRenk] = useState("#132453");
-
-  // =========================================================
-  // STAJYER DİYALOĞU
-  // =========================================================
-
-  const [stajyerDialogOpen, setStajyerDialogOpen] = useState(false);
-
-  const [seciliDepartman, setSeciliDepartman] =
-    useState<Departman | null>(null);
-
-  // =========================================================
+  // --------------------------------------------------
   // YENİ DEPARTMAN
-  // =========================================================
+  // --------------------------------------------------
 
-  const yeniDepartmanAc = () => {
-    setDuzenlenenDepartman(null);
+  const handleOpenAdd = () => {
+    setDuzenlemeId(null);
     setDepartmanAdi("");
     setSorumlu("");
-    setRenk("#132453");
     setDialogOpen(true);
   };
 
-  // =========================================================
-  // DÜZENLE
-  // =========================================================
+  // --------------------------------------------------
+  // DEPARTMAN DÜZENLE
+  // --------------------------------------------------
 
-  const departmanDuzenle = (departman: Departman) => {
-    setDuzenlenenDepartman(departman);
-    setDepartmanAdi(departman.ad);
-    setSorumlu(departman.sorumlu);
-    setRenk(departman.renk);
-    setDialogOpen(true);
-  };
-
-  // =========================================================
-  // DEPARTMAN STAJYERLERİNİ GÖSTER
-  // =========================================================
-
-  const departmanStajyerleriniGoster = (
+  const handleOpenEdit = (
     departman: Departman
   ) => {
-    setSeciliDepartman(departman);
-    setStajyerDialogOpen(true);
+    setDuzenlemeId(departman.id);
+    setDepartmanAdi(departman.ad);
+    setSorumlu(departman.sorumlu);
+    setDialogOpen(true);
   };
 
-  // =========================================================
-  // KAYDET
-  // =========================================================
+  // --------------------------------------------------
+  // DEPARTMAN DİYALOG KAPAT
+  // --------------------------------------------------
 
-  const departmanKaydet = () => {
-    if (!departmanAdi.trim()) return;
+  const handleClose = () => {
+    setDialogOpen(false);
+    setDepartmanAdi("");
+    setSorumlu("");
+    setDuzenlemeId(null);
+  };
 
-    if (duzenlenenDepartman) {
+  // --------------------------------------------------
+  // DEPARTMAN KAYDET
+  // --------------------------------------------------
+
+  const handleSave = () => {
+    if (
+      !departmanAdi.trim() ||
+      !sorumlu.trim()
+    ) {
+      return;
+    }
+
+    if (duzenlemeId !== null) {
       setDepartmanlar((prev) =>
         prev.map((departman) =>
-          departman.id === duzenlenenDepartman.id
+          departman.id === duzenlemeId
             ? {
                 ...departman,
-                ad: departmanAdi,
-                sorumlu: sorumlu,
-                renk: renk,
+                ad: departmanAdi.trim(),
+                sorumlu: sorumlu.trim(),
               }
             : departman
         )
@@ -358,12 +368,10 @@ export default function DepartmanlarPage() {
     } else {
       const yeniDepartman: Departman = {
         id: Date.now(),
-        ad: departmanAdi,
-        sorumlu: sorumlu || "Atanmadı",
-        stajyer: 0,
-        stajyerler: [],
-        renk: renk,
-        aktif: true,
+        ad: departmanAdi.trim(),
+        sorumlu: sorumlu.trim(),
+        stajyerSayisi: 0,
+        durum: "Aktif",
       };
 
       setDepartmanlar((prev) => [
@@ -372,79 +380,93 @@ export default function DepartmanlarPage() {
       ]);
     }
 
-    setDialogOpen(false);
+    handleClose();
   };
 
-  // =========================================================
-  // SİL
-  // =========================================================
+  // --------------------------------------------------
+  // DEPARTMAN SİL
+  // --------------------------------------------------
 
-  const departmanSil = (id: number) => {
+  const handleDelete = (id: number) => {
     const onay = window.confirm(
       "Bu departmanı silmek istediğinize emin misiniz?"
     );
 
-    if (!onay) return;
+    if (!onay) {
+      return;
+    }
 
     setDepartmanlar((prev) =>
-      prev.filter((departman) => departman.id !== id)
-    );
-  };
-
-  // =========================================================
-  // AKTİF / PASİF
-  // =========================================================
-
-  const durumDegistir = (id: number) => {
-    setDepartmanlar((prev) =>
-      prev.map((departman) =>
-        departman.id === id
-          ? {
-              ...departman,
-              aktif: !departman.aktif,
-            }
-          : departman
+      prev.filter(
+        (departman) => departman.id !== id
       )
     );
   };
 
-  // =========================================================
+  // --------------------------------------------------
+  // STAJYERLERİ GÖSTER
+  // --------------------------------------------------
+
+  const handleStajyerleriGoster = (
+    departman: Departman
+  ) => {
+    setSeciliDepartman(departman);
+    setStajyerDialogOpen(true);
+  };
+
+  // --------------------------------------------------
+  // STAJYER DİYALOG KAPAT
+  // --------------------------------------------------
+
+  const handleStajyerDialogClose = () => {
+    setStajyerDialogOpen(false);
+    setSeciliDepartman(null);
+  };
+
+  // --------------------------------------------------
   // İSTATİSTİKLER
-  // =========================================================
+  // --------------------------------------------------
 
-  const toplamDepartman = departmanlar.length;
+  const toplamStajyer =
+    departmanlar.reduce(
+      (toplam, departman) =>
+        toplam + departman.stajyerSayisi,
+      0
+    );
 
-  const aktifDepartman = departmanlar.filter(
-    (departman) => departman.aktif
-  ).length;
+  const aktifDepartman =
+    departmanlar.filter(
+      (departman) =>
+        departman.durum === "Aktif"
+    ).length;
 
-  const toplamStajyer = departmanlar.reduce(
-    (toplam, departman) =>
-      toplam + departman.stajyer,
-    0
-  );
-
-  // =========================================================
-  // RETURN
-  // =========================================================
+  const seciliStajyerler =
+    seciliDepartman
+      ? departmanStajyerleri[
+          seciliDepartman.ad
+        ] || []
+      : [];
 
   return (
     <Box
       sx={{
         minHeight: "100vh",
         backgroundColor: "#F5F7FA",
+        display: "flex",
+        color: "#17202A",
       }}
     >
-      {/* ===================================================== */}
-      {/* SOL MENÜ */}
-      {/* ===================================================== */}
+      {/* =====================================================
+          SOL MENÜ
+      ===================================================== */}
 
       <Box
+        component="aside"
         sx={{
           width: 195,
           background:
             "linear-gradient(180deg, #0F2742 0%, #286B9D 100%)",
-          color: "white",
+          color: "#ffffff",
           display: "flex",
           flexDirection: "column",
           position: "fixed",
@@ -464,19 +486,14 @@ export default function DepartmanlarPage() {
               "1px solid rgba(255,255,255,0.15)",
           }}
         >
-     <Box
-  component="img"
-  src="/logo.png"
-  alt="ONVO"
-  sx={{
-    width: 105,
-    height: "auto",
-    display: "block",
-    objectFit: "contain",
-    filter: "brightness(0) invert(1)",
-    mb: 0.8,
-  }}
-/>
+          <Typography
+            sx={{
+              fontSize: 23,
+              fontWeight: "bold",
+            }}
+          >
+            ONVO
+          </Typography>
 
           <Typography
             sx={{
@@ -491,10 +508,15 @@ export default function DepartmanlarPage() {
 
         {/* MENÜ */}
 
-        <Box sx={{ px: 1, py: 1.5 }}>
+        <Box
+          sx={{
+            px: 1,
+            py: 1.5,
+          }}
+        >
           {menuItems.map((item) => {
             const active =
-              item.path === "/yetkili/departmanlar";
+              pathname === item.path;
 
             return (
               <Box
@@ -511,13 +533,16 @@ export default function DepartmanlarPage() {
                   mb: 0.35,
                   borderRadius: 1.5,
                   cursor: "pointer",
+
                   backgroundColor: active
                     ? "rgba(255,255,255,0.20)"
                     : "transparent",
+
                   "&:hover": {
                     backgroundColor:
                       "rgba(255,255,255,0.14)",
                   },
+
                   transition: "0.2s",
                 }}
               >
@@ -525,6 +550,7 @@ export default function DepartmanlarPage() {
                   sx={{
                     display: "flex",
                     alignItems: "center",
+
                     "& svg": {
                       fontSize: 19,
                     },
@@ -558,22 +584,29 @@ export default function DepartmanlarPage() {
           }}
         >
           <Box
-            onClick={() => router.push("/")}
+            onClick={() =>
+              router.push("/login/yetkili")
+            }
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 1.2,
               px: 1.3,
-              py: 1.05,
+              py: 1,
               borderRadius: 1.5,
               cursor: "pointer",
+
               "&:hover": {
                 backgroundColor:
                   "rgba(255,255,255,0.14)",
               },
             }}
           >
-            <Logout sx={{ fontSize: 19 }} />
+            <Logout
+              sx={{
+                fontSize: 19,
+              }}
+            />
 
             <Typography
               sx={{
@@ -587,24 +620,25 @@ export default function DepartmanlarPage() {
         </Box>
       </Box>
 
-      {/* ===================================================== */}
-      {/* ANA ALAN */}
-      {/* ===================================================== */}
+      {/* =====================================================
+          ANA ALAN
+      ===================================================== */}
 
       <Box
+        component="main"
         sx={{
           marginLeft: "195px",
           width: "calc(100% - 195px)",
           minHeight: "100vh",
         }}
       >
-        {/* ÜST BAR */}
+        {/* NAVBAR */}
 
         <Box
           component="header"
           sx={{
             height: 58,
-            backgroundColor: "white",
+            backgroundColor: "#ffffff",
             borderBottom:
               "1px solid #e4e7ec",
             display: "flex",
@@ -613,6 +647,20 @@ export default function DepartmanlarPage() {
             px: 3,
           }}
         >
+          <IconButton
+            onClick={() =>
+              router.push(
+                "/yetkili/bildirimler"
+              )
+            }
+            sx={{
+              mr: 1,
+              color: "#286B9D",
+            }}
+          >
+            <Notifications />
+          </IconButton>
+
           <Box
             sx={{
               width: 34,
@@ -626,7 +674,11 @@ export default function DepartmanlarPage() {
               mr: 1,
             }}
           >
-            <Person sx={{ fontSize: 20 }} />
+            <Person
+              sx={{
+                fontSize: 20,
+              }}
+            />
           </Box>
 
           <Box>
@@ -651,20 +703,19 @@ export default function DepartmanlarPage() {
           </Box>
         </Box>
 
-        {/* =================================================== */}
-        {/* İÇERİK */}
-        {/* =================================================== */}
+        {/* =====================================================
+            İÇERİK
+        ===================================================== */}
 
         <Box
-          component="main"
           sx={{
-            minHeight: "calc(100vh - 58px)",
-            backgroundColor: "#F5F7FA",
             px: {
               xs: 2,
               md: 4,
             },
             py: 3,
+            maxWidth: 1400,
+            mx: "auto",
           }}
         >
           {/* BAŞLIK */}
@@ -674,20 +725,25 @@ export default function DepartmanlarPage() {
               display: "flex",
               justifyContent:
                 "space-between",
-              alignItems: "center",
-              mb: 4,
+              alignItems: {
+                xs: "flex-start",
+                md: "center",
+              },
+              flexDirection: {
+                xs: "column",
+                md: "row",
+              },
               gap: 2,
+              mb: 3,
             }}
           >
             <Box>
               <Typography
                 sx={{
-                  fontSize: {
-                    xs: 25,
-                    md: 30,
-                  },
-                  fontWeight: 700,
+                  fontSize: 28,
+                  fontWeight: "bold",
                   color: "#0F2742",
+                  mb: 0.5,
                 }}
               >
                 Departman Yönetimi
@@ -695,9 +751,8 @@ export default function DepartmanlarPage() {
 
               <Typography
                 sx={{
-                  mt: 0.7,
-                  fontSize: 13,
                   color: "#64748B",
+                  fontSize: 13,
                 }}
               >
                 Stajyerlerin bağlı olduğu
@@ -709,16 +764,16 @@ export default function DepartmanlarPage() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={yeniDepartmanAc}
+              onClick={handleOpenAdd}
               sx={{
                 backgroundColor: "#0F2742",
+                borderRadius: 1.5,
                 textTransform: "none",
                 fontWeight: 600,
-                borderRadius: 2,
-                px: 2.5,
-                py: 1.2,
+                px: 2,
+
                 "&:hover": {
-                  backgroundColor: "#17395D",
+                  backgroundColor: "#173B61",
                 },
               }}
             >
@@ -726,712 +781,425 @@ export default function DepartmanlarPage() {
             </Button>
           </Box>
 
-          {/* ================================================= */}
-          {/* İSTATİSTİK KARTLARI */}
-          {/* ================================================= */}
-
-          <Grid
-            container
-            spacing={2.5}
-            sx={{ mb: 4 }}
-          >
-            {/* TOPLAM DEPARTMAN */}
-
-            <Grid
-              size={{
-                xs: 12,
-                md: 4,
-              }}
-            >
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  border:
-                    "1px solid #E2E8F0",
-                  boxShadow: "none",
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent:
-                        "space-between",
-                    }}
-                  >
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: "#64748B",
-                        }}
-                      >
-                        Toplam Departman
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 1,
-                          fontSize: 30,
-                          fontWeight: 700,
-                          color: "#0F2742",
-                        }}
-                      >
-                        {toplamDepartman}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        borderRadius: 2,
-                        backgroundColor:
-                          "#EDF4F9",
-                        display: "flex",
-                        alignItems:
-                          "center",
-                        justifyContent:
-                          "center",
-                        color: "#286B9D",
-                      }}
-                    >
-                      <Business />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* AKTİF DEPARTMAN */}
-
-            <Grid
-              size={{
-                xs: 12,
-                md: 4,
-              }}
-            >
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  border:
-                    "1px solid #E2E8F0",
-                  boxShadow: "none",
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent:
-                        "space-between",
-                    }}
-                  >
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: "#64748B",
-                        }}
-                      >
-                        Aktif Departman
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 1,
-                          fontSize: 30,
-                          fontWeight: 700,
-                          color: "#16A34A",
-                        }}
-                      >
-                        {aktifDepartman}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        borderRadius: 2,
-                        backgroundColor:
-                          "#ECFDF3",
-                        display: "flex",
-                        alignItems:
-                          "center",
-                        justifyContent:
-                          "center",
-                        color: "#16A34A",
-                      }}
-                    >
-                      <CheckCircle />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            {/* TOPLAM STAJYER */}
-
-            <Grid
-              size={{
-                xs: 12,
-                md: 4,
-              }}
-            >
-              <Card
-                sx={{
-                  borderRadius: 3,
-                  border:
-                    "1px solid #E2E8F0",
-                  boxShadow: "none",
-                  height: "100%",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent:
-                        "space-between",
-                    }}
-                  >
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: "#64748B",
-                        }}
-                      >
-                        Toplam Stajyer
-                      </Typography>
-
-                      <Typography
-                        sx={{
-                          mt: 1,
-                          fontSize: 30,
-                          fontWeight: 700,
-                          color: "#286B9D",
-                        }}
-                      >
-                        {toplamStajyer}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        borderRadius: 2,
-                        backgroundColor:
-                          "#EDF4F9",
-                        display: "flex",
-                        alignItems:
-                          "center",
-                        justifyContent:
-                          "center",
-                        color: "#286B9D",
-                      }}
-                    >
-                      <People />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-
-          {/* ================================================= */}
-          {/* DEPARTMAN KARTLARI */}
-          {/* ================================================= */}
+          {/* =====================================================
+              İSTATİSTİKLER
+          ===================================================== */}
 
           <Box
             sx={{
-              backgroundColor: "white",
-              border:
-                "1px solid #E2E8F0",
-              borderRadius: 3,
-              p: {
-                xs: 2,
-                md: 3,
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "repeat(3, 1fr)",
               },
+              gap: 2,
+              mb: 3,
             }}
           >
-            <Typography
+            {/* TOPLAM DEPARTMAN */}
+
+            <Card
+              elevation={0}
               sx={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#0F2742",
-                mb: 0.5,
+                border:
+                  "1px solid #E4E7EC",
+                borderRadius: 2,
               }}
             >
-              Departmanlar
-            </Typography>
+              <CardContent
+                sx={{
+                  p: 2,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#64748B",
+                  }}
+                >
+                  Toplam Departman
+                </Typography>
 
-            <Typography
+                <Typography
+                  sx={{
+                    fontSize: 27,
+                    fontWeight: "bold",
+                    color: "#0F2742",
+                    mt: 1,
+                  }}
+                >
+                  {departmanlar.length}
+                </Typography>
+              </CardContent>
+            </Card>
+
+            {/* AKTİF DEPARTMAN */}
+
+            <Card
+              elevation={0}
               sx={{
-                fontSize: 12,
-                color: "#64748B",
-                mb: 3,
+                border:
+                  "1px solid #E4E7EC",
+                borderRadius: 2,
               }}
             >
-              Bir departmana tıklayarak o
-              departmanda bulunan stajyerleri
-              görüntüleyebilirsiniz.
-            </Typography>
+              <CardContent
+                sx={{
+                  p: 2,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#64748B",
+                  }}
+                >
+                  Aktif Departman
+                </Typography>
 
-            <Divider sx={{ mb: 3 }} />
+                <Typography
+                  sx={{
+                    fontSize: 27,
+                    fontWeight: "bold",
+                    color: "#16A34A",
+                    mt: 1,
+                  }}
+                >
+                  {aktifDepartman}
+                </Typography>
+              </CardContent>
+            </Card>
 
-            <Grid
-              container
-              spacing={2.5}
+            {/* TOPLAM STAJYER */}
+
+            <Card
+              elevation={0}
+              sx={{
+                border:
+                  "1px solid #E4E7EC",
+                borderRadius: 2,
+              }}
             >
-              {departmanlar.map(
-                (departman) => (
-                  <Grid
-                    size={{
-                      xs: 12,
-                      sm: 6,
-                      lg: 4,
+              <CardContent
+                sx={{
+                  p: 2,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 12,
+                    color: "#64748B",
+                  }}
+                >
+                  Toplam Stajyer
+                </Typography>
+
+                <Typography
+                  sx={{
+                    fontSize: 27,
+                    fontWeight: "bold",
+                    color: "#286B9D",
+                    mt: 1,
+                  }}
+                >
+                  {toplamStajyer}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* =====================================================
+              DEPARTMANLAR
+          ===================================================== */}
+
+          <Card
+            elevation={0}
+            sx={{
+              border:
+                "1px solid #E4E7EC",
+              borderRadius: 2,
+            }}
+          >
+            <CardContent
+              sx={{
+                p: 2.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: "#0F2742",
+                  mb: 2,
+                }}
+              >
+                Departmanlar
+              </Typography>
+
+              <Divider
+                sx={{
+                  mb: 1,
+                }}
+              />
+
+              {departmanlar.length === 0 ? (
+                <Box
+                  sx={{
+                    py: 7,
+                    textAlign: "center",
+                  }}
+                >
+                  <Business
+                    sx={{
+                      fontSize: 48,
+                      color: "#CBD5E1",
+                      mb: 1,
                     }}
-                    key={departman.id}
+                  />
+
+                  <Typography
+                    sx={{
+                      color: "#64748B",
+                      fontSize: 14,
+                    }}
                   >
-                    <Card
-                      onClick={() =>
-                        departmanStajyerleriniGoster(
-                          departman
-                        )
-                      }
+                    Henüz departman
+                    bulunmuyor.
+                  </Typography>
+                </Box>
+              ) : (
+                departmanlar.map(
+                  (
+                    departman,
+                    index
+                  ) => (
+                    <Box
+                      key={departman.id}
                       sx={{
-                        borderRadius: 3,
-                        border:
-                          "1px solid #E2E8F0",
-                        boxShadow: "none",
-                        height: "100%",
-                        opacity:
-                          departman.aktif
-                            ? 1
-                            : 0.65,
-                        transition:
-                          "0.2s",
-                        cursor:
-                          "pointer",
-                        "&:hover": {
-                          boxShadow:
-                            "0 5px 18px rgba(15,39,66,0.12)",
-                          transform:
-                            "translateY(-2px)",
-                        },
+                        display: "flex",
+                        alignItems:
+                          "center",
+                        gap: 2,
+                        py: 2,
+
+                        borderBottom:
+                          index !==
+                          departmanlar.length -
+                            1
+                            ? "1px solid #EEF1F5"
+                            : "none",
                       }}
                     >
-                      <CardContent
-                        sx={{ p: 2.5 }}
+                      {/* DEPARTMAN İKONU */}
+
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 1.5,
+                          backgroundColor:
+                            "#EDF4F9",
+                          color: "#286B9D",
+                          display: "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          flexShrink: 0,
+                        }}
                       >
-                        {/* RENK + BAŞLIK */}
-
-                        <Box
+                        <Business
                           sx={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "flex-start",
-                            justifyContent:
-                              "space-between",
+                            fontSize: 22,
+                          }}
+                        />
+                      </Box>
+
+                      {/* DEPARTMAN BİLGİLERİ */}
+
+                      <Box
+                        sx={{
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: 14,
+                            fontWeight:
+                              "bold",
+                            color:
+                              "#17202A",
                           }}
                         >
-                          <Box
-                            sx={{
-                              display:
-                                "flex",
-                              alignItems:
-                                "center",
-                              gap: 1.5,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 2,
-                                backgroundColor:
-                                  departman.renk,
-                                display:
-                                  "flex",
-                                alignItems:
-                                  "center",
-                                justifyContent:
-                                  "center",
-                                color:
-                                  "white",
-                                boxShadow:
-                                  "0 3px 8px rgba(0,0,0,0.12)",
-                              }}
-                            >
-                              <Business />
-                            </Box>
+                          {departman.ad}
+                        </Typography>
 
-                            <Box>
-                              <Typography
-                                sx={{
-                                  fontSize: 16,
-                                  fontWeight: 700,
-                                  color:
-                                    "#17202A",
-                                }}
-                              >
-                                {departman.ad}
-                              </Typography>
-
-                              <Typography
-                                sx={{
-                                  fontSize: 11,
-                                  color:
-                                    "#64748B",
-                                  mt: 0.3,
-                                }}
-                              >
-                                Sorumlu:{" "}
-                                {
-                                  departman.sorumlu
-                                }
-                              </Typography>
-                            </Box>
-                          </Box>
-
-                          <Chip
-                            icon={
-                              departman.aktif ? (
-                                <CheckCircle />
-                              ) : (
-                                <Block />
-                              )
-                            }
-                            label={
-                              departman.aktif
-                                ? "Aktif"
-                                : "Pasif"
-                            }
-                            size="small"
-                            sx={{
-                              height: 27,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color:
-                                departman.aktif
-                                  ? "#166534"
-                                  : "#991B1B",
-                              backgroundColor:
-                                departman.aktif
-                                  ? "#DCFCE7"
-                                  : "#FEE2E2",
-                              "& .MuiChip-icon":
-                                {
-                                  fontSize: 15,
-                                  color:
-                                    "inherit",
-                                },
-                            }}
-                          />
-                        </Box>
-
-                        <Divider
-                          sx={{ my: 2 }}
-                        />
-
-                        {/* BİLGİLER */}
-
-                        <Box
+                        <Typography
                           sx={{
-                            display:
-                              "flex",
-                            justifyContent:
-                              "space-between",
-                            alignItems:
-                              "center",
+                            fontSize: 11,
+                            color:
+                              "#64748B",
+                            mt: 0.4,
                           }}
                         >
-                          <Box>
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color:
-                                  "#64748B",
-                              }}
-                            >
-                              Stajyer Sayısı
-                            </Typography>
+                          Sorumlu:{" "}
+                          {
+                            departman.sorumlu
+                          }
+                        </Typography>
+                      </Box>
 
-                            <Box
-                              sx={{
-                                display:
-                                  "flex",
-                                alignItems:
-                                  "center",
-                                gap: 0.7,
-                                mt: 0.4,
-                              }}
-                            >
-                              <People
-                                sx={{
-                                  fontSize: 18,
-                                  color:
-                                    "#286B9D",
-                                }}
-                              />
+                      {/* STAJYER SAYISI */}
 
-                              <Typography
-                                sx={{
-                                  fontSize: 15,
-                                  fontWeight: 700,
-                                  color:
-                                    "#0F2742",
-                                }}
-                              >
-                                {
-                                  departman.stajyer
-                                }{" "}
-                                stajyer
-                              </Typography>
-                            </Box>
-                          </Box>
+                      <Box
+                        onClick={() =>
+                          handleStajyerleriGoster(
+                            departman
+                          )
+                        }
+                        sx={{
+                          display: {
+                            xs: "none",
+                            sm: "flex",
+                          },
+                          alignItems:
+                            "center",
+                          gap: 0.7,
+                          minWidth: 120,
+                          cursor:
+                            "pointer",
+                          borderRadius: 1,
+                          px: 1,
+                          py: 0.7,
 
-                          <Box>
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color:
-                                  "#64748B",
-                              }}
-                            >
-                              Departman Rengi
-                            </Typography>
-
-                            <Box
-                              sx={{
-                                display:
-                                  "flex",
-                                alignItems:
-                                  "center",
-                                gap: 0.7,
-                                mt: 0.5,
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  width: 22,
-                                  height: 22,
-                                  borderRadius: 1,
-                                  backgroundColor:
-                                    departman.renk,
-                                  border:
-                                    "1px solid rgba(0,0,0,0.1)",
-                                }}
-                              />
-
-                              <Typography
-                                sx={{
-                                  fontSize: 11,
-                                  fontFamily:
-                                    "monospace",
-                                  color:
-                                    "#475569",
-                                }}
-                              >
-                                {
-                                  departman.renk
-                                }
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Box>
-
-                        <Divider
-                          sx={{ my: 2 }}
-                        />
-
-                        {/* STAJYERLERİ GÖR */}
-
-                        <Box
-                          sx={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            justifyContent:
-                              "center",
-                            gap: 0.7,
-                            py: 0.8,
-                            borderRadius: 1.5,
+                          "&:hover": {
                             backgroundColor:
-                              "#F8FAFC",
+                              "#EDF4F9",
+                          },
+                        }}
+                      >
+                        <Groups
+                          sx={{
+                            fontSize: 18,
                             color:
                               "#286B9D",
-                            mb: 1.5,
                           }}
-                        >
-                          <People
-                            sx={{
-                              fontSize: 17,
-                            }}
-                          />
+                        />
 
-                          <Typography
-                            sx={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                            }}
-                          >
-                            Stajyerleri Görüntüle
-                          </Typography>
-                        </Box>
-
-                        {/* AKSİYONLAR */}
-
-                        <Box
+                        <Typography
                           sx={{
-                            display:
-                              "flex",
-                            justifyContent:
-                              "space-between",
-                            alignItems:
-                              "center",
+                            fontSize: 12,
+                            color:
+                              "#286B9D",
+                            fontWeight: 600,
                           }}
                         >
-                          <FormControlLabel
-                            sx={{
-                              m: 0,
-                            }}
-                            control={
-                              <Switch
-                                size="small"
-                                checked={
-                                  departman.aktif
-                                }
-                                onClick={(e) =>
-                                  e.stopPropagation()
-                                }
-                                onChange={() =>
-                                  durumDegistir(
-                                    departman.id
-                                  )
-                                }
-                              />
-                            }
-                            label={
-                              <Typography
-                                sx={{
-                                  fontSize: 11,
-                                  color:
-                                    "#475569",
-                                }}
-                              >
-                                {departman.aktif
-                                  ? "Aktif"
-                                  : "Pasif"}
-                              </Typography>
-                            }
-                          />
+                          {
+                            departman.stajyerSayisi
+                          }{" "}
+                          stajyer
+                        </Typography>
+                      </Box>
 
-                          <Box
-                            sx={{
-                              display:
-                                "flex",
-                              gap: 0.5,
-                            }}
-                          >
-                            {/* DÜZENLE */}
+                      {/* DURUM */}
 
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                departmanDuzenle(
-                                  departman
-                                );
-                              }}
-                              sx={{
-                                color:
-                                  "#286B9D",
-                                backgroundColor:
-                                  "#EDF4F9",
-                                "&:hover": {
-                                  backgroundColor:
-                                    "#DCECF7",
-                                },
-                              }}
-                            >
-                              <Edit
-                                sx={{
-                                  fontSize: 18,
-                                }}
-                              />
-                            </IconButton>
+                      <Chip
+                        label={
+                          departman.durum
+                        }
+                        size="small"
+                        color={
+                          departman.durum ===
+                          "Aktif"
+                            ? "success"
+                            : "default"
+                        }
+                        sx={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                        }}
+                      />
 
-                            {/* SİL */}
+                      {/* DÜZENLE */}
 
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                departmanSil(
-                                  departman.id
-                                );
-                              }}
-                              sx={{
-                                color:
-                                  "#DC2626",
-                                backgroundColor:
-                                  "#FEF2F2",
-                                "&:hover": {
-                                  backgroundColor:
-                                    "#FEE2E2",
-                                },
-                              }}
-                            >
-                              <Delete
-                                sx={{
-                                  fontSize: 18,
-                                }}
-                              />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
+                      <IconButton
+                        onClick={() =>
+                          handleOpenEdit(
+                            departman
+                          )
+                        }
+                        sx={{
+                          color:
+                            "#286B9D",
+                        }}
+                      >
+                        <Edit
+                          sx={{
+                            fontSize: 19,
+                          }}
+                        />
+                      </IconButton>
+
+                      {/* SİL */}
+
+                      <IconButton
+                        onClick={() =>
+                          handleDelete(
+                            departman.id
+                          )
+                        }
+                        sx={{
+                          color:
+                            "#DC2626",
+                        }}
+                      >
+                        <Delete
+                          sx={{
+                            fontSize: 19,
+                          }}
+                        />
+                      </IconButton>
+                    </Box>
+                  )
                 )
               )}
-            </Grid>
-          </Box>
+            </CardContent>
+          </Card>
         </Box>
       </Box>
 
-      {/* ===================================================== */}
-      {/* YENİ / DÜZENLEME DİYALOĞU */}
-      {/* ===================================================== */}
+      {/* =====================================================
+          YENİ DEPARTMAN / DÜZENLEME MODALI
+      ===================================================== */}
 
       <Dialog
         open={dialogOpen}
-        onClose={() =>
-          setDialogOpen(false)
-        }
+        onClose={handleClose}
         fullWidth
         maxWidth="sm"
       >
         <DialogTitle
           sx={{
-            fontWeight: 700,
             color: "#0F2742",
+            fontWeight: "bold",
+            display: "flex",
+            alignItems:
+              "center",
+            justifyContent:
+              "space-between",
           }}
         >
-          {duzenlenenDepartman
+          {duzenlemeId !== null
             ? "Departmanı Düzenle"
-            : "Yeni Departman"}
+            : "Yeni Departman Ekle"}
+
+          <IconButton
+            onClick={handleClose}
+          >
+            <Close />
+          </IconButton>
         </DialogTitle>
 
         <DialogContent>
@@ -1444,7 +1212,10 @@ export default function DepartmanlarPage() {
                 e.target.value
               )
             }
-            margin="normal"
+            sx={{
+              mt: 1,
+              mb: 2,
+            }}
           />
 
           <TextField
@@ -1452,188 +1223,25 @@ export default function DepartmanlarPage() {
             label="Departman Sorumlusu"
             value={sorumlu}
             onChange={(e) =>
-              setSorumlu(e.target.value)
+              setSorumlu(
+                e.target.value
+              )
             }
-            margin="normal"
           />
-
-          {/* RENK SEÇİMİ */}
-
-          <Box sx={{ mt: 3 }}>
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#0F2742",
-                mb: 1.5,
-              }}
-            >
-              Departman Rengi
-            </Typography>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems:
-                  "center",
-                gap: 2,
-                p: 2,
-                border:
-                  "1px solid #E2E8F0",
-                borderRadius: 2,
-                backgroundColor:
-                  "#F8FAFC",
-              }}
-            >
-              <Box
-                sx={{
-                  position:
-                    "relative",
-                  width: 52,
-                  height: 52,
-                  borderRadius: 1.5,
-                  overflow:
-                    "hidden",
-                  border:
-                    "1px solid #CBD5E1",
-                }}
-              >
-                <input
-                  type="color"
-                  value={renk}
-                  onChange={(e) =>
-                    setRenk(
-                      e.target.value
-                    )
-                  }
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "none",
-                    padding: 0,
-                    cursor:
-                      "pointer",
-                    backgroundColor:
-                      "transparent",
-                  }}
-                />
-              </Box>
-
-              <Box>
-                <Box
-                  sx={{
-                    display:
-                      "flex",
-                    alignItems:
-                      "center",
-                    gap: 0.8,
-                    mb: 0.5,
-                  }}
-                >
-                  <Palette
-                    sx={{
-                      fontSize: 18,
-                      color:
-                        "#64748B",
-                    }}
-                  />
-
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      color:
-                        "#64748B",
-                    }}
-                  >
-                    Seçilen Renk
-                  </Typography>
-                </Box>
-
-                <Typography
-                  sx={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    fontFamily:
-                      "monospace",
-                    color:
-                      "#0F2742",
-                  }}
-                >
-                  {renk.toUpperCase()}
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* HAZIR RENKLER */}
-
-            <Typography
-              sx={{
-                mt: 2,
-                mb: 1,
-                fontSize: 12,
-                color: "#64748B",
-              }}
-            >
-              Hazır renkler
-            </Typography>
-
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                "#132453",
-                "#2563EB",
-                "#059669",
-                "#D97706",
-                "#7C3AED",
-                "#DB2777",
-                "#0891B2",
-                "#475569",
-              ].map(
-                (color) => (
-                  <Box
-                    key={color}
-                    onClick={() =>
-                      setRenk(color)
-                    }
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 1,
-                      backgroundColor:
-                        color,
-                      cursor:
-                        "pointer",
-                      border:
-                        renk.toUpperCase() ===
-                        color.toUpperCase()
-                          ? "3px solid #0F2742"
-                          : "2px solid white",
-                      boxShadow:
-                        "0 1px 4px rgba(0,0,0,0.2)",
-                    }}
-                  />
-                )
-              )}
-            </Box>
-          </Box>
         </DialogContent>
 
         <DialogActions
-          sx={{ p: 2.5 }}
+          sx={{
+            px: 3,
+            pb: 2.5,
+          }}
         >
           <Button
-            onClick={() =>
-              setDialogOpen(false)
-            }
+            onClick={handleClose}
             sx={{
+              color: "#64748B",
               textTransform:
                 "none",
-              color: "#64748B",
             }}
           >
             İptal
@@ -1641,246 +1249,233 @@ export default function DepartmanlarPage() {
 
           <Button
             variant="contained"
-            onClick={
-              departmanKaydet
-            }
+            onClick={handleSave}
             sx={{
               backgroundColor:
                 "#0F2742",
               textTransform:
                 "none",
-              px: 3,
+
               "&:hover": {
                 backgroundColor:
-                  "#17395D",
+                  "#173B61",
               },
             }}
           >
-            Kaydet
+            {duzenlemeId !== null
+              ? "Güncelle"
+              : "Kaydet"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* ===================================================== */}
-      {/* DEPARTMAN STAJYERLERİ DİYALOĞU */}
-      {/* ===================================================== */}
+      {/* =====================================================
+          STAJYERLER MODALI
+      ===================================================== */}
 
       <Dialog
         open={stajyerDialogOpen}
-        onClose={() =>
-          setStajyerDialogOpen(
-            false
-          )
+        onClose={
+          handleStajyerDialogClose
         }
         fullWidth
-        maxWidth="md"
+        maxWidth="sm"
       >
         <DialogTitle
           sx={{
+            color: "#0F2742",
+            fontWeight: "bold",
             display: "flex",
-            alignItems: "center",
+            alignItems:
+              "center",
             justifyContent:
               "space-between",
-            color: "#0F2742",
-            fontWeight: 700,
           }}
         >
           <Box>
-            <Typography
-              sx={{
-                fontSize: 21,
-                fontWeight: 700,
-                color: "#0F2742",
-              }}
-            >
-              {seciliDepartman?.ad}{" "}
-              Departmanı
-            </Typography>
+            {seciliDepartman?.ad}{" "}
+            Departmanı
 
             <Typography
               sx={{
                 fontSize: 12,
                 color: "#64748B",
-                mt: 0.4,
+                fontWeight: 400,
+                mt: 0.5,
               }}
             >
-              Bu departmanda bulunan
+              Departmana bağlı
               stajyerler
             </Typography>
           </Box>
 
           <IconButton
-            onClick={() =>
-              setStajyerDialogOpen(
-                false
-              )
+            onClick={
+              handleStajyerDialogClose
             }
-            sx={{
-              color: "#64748B",
-              "&:hover": {
-                backgroundColor:
-                  "#F1F5F9",
-              },
-            }}
           >
             <Close />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent
-          dividers
-        >
-          {seciliDepartman &&
-          seciliDepartman.stajyerler &&
-          seciliDepartman.stajyerler
-            .length > 0 ? (
-            <Grid
-              container
-              spacing={2}
+        <DialogContent>
+          {/* TOPLAM */}
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems:
+                "center",
+              gap: 1,
+              mb: 2,
+              p: 1.5,
+              backgroundColor:
+                "#EDF4F9",
+              borderRadius: 1.5,
+            }}
+          >
+            <Groups
+              sx={{
+                color: "#286B9D",
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontSize: 13,
+                color: "#286B9D",
+                fontWeight: 600,
+              }}
             >
-              {seciliDepartman.stajyerler.map(
-                (stajyer) => (
-                  <Grid
-                    size={{
-                      xs: 12,
-                      md: 6,
+              {
+                seciliDepartman?.stajyerSayisi
+              }{" "}
+              stajyer
+            </Typography>
+          </Box>
+
+          {seciliStajyerler.length >
+          0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection:
+                  "column",
+                gap: 1,
+              }}
+            >
+              {seciliStajyerler.map(
+                (
+                  stajyer,
+                  index
+                ) => (
+                  <Box
+                    key={`${stajyer.ad}-${index}`}
+                    sx={{
+                      display:
+                        "flex",
+                      alignItems:
+                        "center",
+                      gap: 1.5,
+                      p: 1.5,
+                      border:
+                        "1px solid #E4E7EC",
+                      borderRadius: 1.5,
+                      backgroundColor:
+                        "#F8FAFC",
                     }}
-                    key={stajyer.id}
                   >
-                    <Card
+                    {/* PROFİL İKONU */}
+
+                    <Box
                       sx={{
-                        border:
-                          "1px solid #E2E8F0",
-                        borderRadius: 2.5,
-                        boxShadow:
-                          "none",
-                        transition:
-                          "0.2s",
-                        "&:hover": {
-                          boxShadow:
-                            "0 4px 14px rgba(15,39,66,0.08)",
-                        },
+                        width: 40,
+                        height: 40,
+                        borderRadius:
+                          "50%",
+                        backgroundColor:
+                          "#EDF4F9",
+                        color:
+                          "#286B9D",
+                        display:
+                          "flex",
+                        alignItems:
+                          "center",
+                        justifyContent:
+                          "center",
+                        flexShrink: 0,
                       }}
                     >
-                      <CardContent
+                      <Person
                         sx={{
-                          p: 2.2,
+                          fontSize: 21,
+                        }}
+                      />
+                    </Box>
+
+                    {/* BİLGİLER */}
+
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight:
+                            700,
+                          color:
+                            "#17202A",
                         }}
                       >
-                        <Box
-                          sx={{
-                            display:
-                              "flex",
-                            alignItems:
-                              "center",
-                            gap: 1.5,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 42,
-                              height: 42,
-                              borderRadius:
-                                "50%",
-                              backgroundColor:
-                                seciliDepartman.renk,
-                              color:
-                                "white",
-                              display:
-                                "flex",
-                              alignItems:
-                                "center",
-                              justifyContent:
-                                "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Person
-                              sx={{
-                                fontSize: 21,
-                              }}
-                            />
-                          </Box>
+                        {
+                          stajyer.ad
+                        }
+                      </Typography>
 
-                          <Box
-                            sx={{
-                              minWidth: 0,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color:
-                                  "#17202A",
-                              }}
-                            >
-                              {
-                                stajyer.ad
-                              }
-                            </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: 11,
+                          color:
+                            "#64748B",
+                          mt: 0.3,
+                        }}
+                      >
+                        {
+                          stajyer.universite
+                        }
+                      </Typography>
 
-                            <Typography
-                              sx={{
-                                fontSize: 11,
-                                color:
-                                  "#64748B",
-                                mt: 0.3,
-                              }}
-                            >
-                              {
-                                stajyer.pozisyon
-                              }
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Divider
-                          sx={{
-                            my: 1.5,
-                          }}
-                        />
-
-                        <Typography
-                          sx={{
-                            fontSize: 11,
-                            color:
-                              "#64748B",
-                          }}
-                        >
-                          Supervisor
-                        </Typography>
-
-                        <Typography
-                          sx={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color:
-                              "#0F2742",
-                            mt: 0.3,
-                          }}
-                        >
-                          {
-                            stajyer.supervisor
-                          }
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
+                      <Typography
+                        sx={{
+                          fontSize: 10,
+                          color:
+                            "#94A3B8",
+                          mt: 0.2,
+                        }}
+                      >
+                        {
+                          stajyer.bolum
+                        }
+                      </Typography>
+                    </Box>
+                  </Box>
                 )
               )}
-            </Grid>
+            </Box>
           ) : (
             <Box
               sx={{
-                py: 6,
                 textAlign:
                   "center",
+                py: 5,
               }}
             >
               <People
                 sx={{
-                  fontSize: 45,
+                  fontSize: 48,
                   color:
                     "#CBD5E1",
                   mb: 1,
@@ -1889,46 +1484,41 @@ export default function DepartmanlarPage() {
 
               <Typography
                 sx={{
-                  fontSize: 15,
-                  fontWeight: 600,
                   color:
-                    "#475569",
+                    "#64748B",
+                  fontSize: 14,
                 }}
               >
-                Bu departmanda henüz
-                stajyer bulunmuyor.
-              </Typography>
-
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  color:
-                    "#94A3B8",
-                  mt: 0.5,
-                }}
-              >
-                Stajyer kayıtları
-                tamamlandığında
-                burada
-                görüntülenecektir.
+                Bu departmanda
+                kayıtlı stajyer
+                bulunmuyor.
               </Typography>
             </Box>
           )}
         </DialogContent>
 
         <DialogActions
-          sx={{ p: 2 }}
+          sx={{
+            px: 3,
+            pb: 2.5,
+          }}
         >
           <Button
-            onClick={() =>
-              setStajyerDialogOpen(
-                false
-              )
+            variant="contained"
+            onClick={
+              handleStajyerDialogClose
             }
             sx={{
+              backgroundColor:
+                "#0F2742",
               textTransform:
                 "none",
-              color: "#64748B",
+              px: 3,
+
+              "&:hover": {
+                backgroundColor:
+                  "#173B61",
+              },
             }}
           >
             Kapat

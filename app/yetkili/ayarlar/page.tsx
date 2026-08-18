@@ -130,7 +130,7 @@ export default function AyarlarPage() {
     },
     {
       icon: <FolderIcon />,
-      text: "Kütüphane",
+      text: "Belgeler",
       path: "/yetkili/belgeler",
     },
     {
@@ -209,19 +209,15 @@ export default function AyarlarPage() {
               "1px solid rgba(255,255,255,0.15)",
           }}
         >
-       <Box
-  component="img"
-  src="/logo.png"
-  alt="ONVO"
-  sx={{
-    width: 105,
-    height: "auto",
-    display: "block",
-    objectFit: "contain",
-    filter: "brightness(0) invert(1)",
-    mb: 0.8,
-  }}
-/>
+          <Typography
+            sx={{
+              fontSize: 23,
+              fontWeight: "bold",
+            }}
+          >
+            ONVO
+          </Typography>
+
           <Typography
             sx={{
               fontSize: 11,
