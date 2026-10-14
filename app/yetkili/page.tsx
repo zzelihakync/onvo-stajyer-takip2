@@ -67,7 +67,7 @@ export default function YetkiliPage() {
     },
     {
       icon: <Folder />,
-      text: "Belgeler",
+      text: "Kütüphane",
       path: "/yetkili/belgeler",
     },
     {
@@ -157,14 +157,19 @@ export default function YetkiliPage() {
               "1px solid rgba(255,255,255,0.15)",
           }}
         >
-          <Typography
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="ONVO"
             sx={{
-              fontSize: 23,
-              fontWeight: "bold",
+              width: 105,
+              height: "auto",
+              display: "block",
+              objectFit: "contain",
+              filter: "brightness(0) invert(1)",
+              mb: 0.8,
             }}
-          >
-            ONVO
-          </Typography>
+          />
 
           <Typography
             sx={{
@@ -792,8 +797,7 @@ export default function YetkiliPage() {
                         label={intern.report}
                         size="small"
                         color={
-                          intern.report ===
-                          "Onaylandı"
+                          intern.report === "Onaylandı"
                             ? "success"
                             : "warning"
                         }
